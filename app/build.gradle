@@ -1,0 +1,36 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "29.0.2"
+
+    defaultConfig {
+        applicationId "com.tencent.yolov5ncnn"
+        archivesBaseName = "$applicationId"
+
+        ndk {
+            moduleName "ncnn"
+            abiFilters "armeabi-v7a", "arm64-v8a"
+        }
+        minSdkVersion 24
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/jni/CMakeLists.txt')
+        }
+    }
+}
