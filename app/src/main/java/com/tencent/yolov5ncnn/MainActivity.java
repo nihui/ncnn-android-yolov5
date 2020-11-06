@@ -21,6 +21,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +31,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.IOException;
 
 public class MainActivity extends Activity
 {
@@ -125,28 +129,6 @@ public class MainActivity extends Activity
             Color.rgb(139, 125,  96)
         };
 
-//         static const unsigned char colors[19][3] = {
-//             {244,  67,  54},
-//             {233,  30,  99},
-//             {156,  39, 176},
-//             {103,  58, 183},
-//             { 63,  81, 181},
-//             { 33, 150, 243},
-//             {  3, 169, 244},
-//             {  0, 188, 212},
-//             {  0, 150, 136},
-//             { 76, 175,  80},
-//             {139, 195,  74},
-//             {205, 220,  57},
-//             {255, 235,  59},
-//             {255, 193,   7},
-//             {255, 152,   0},
-//             {255,  87,  34},
-//             {121,  85,  72},
-//             {158, 158, 158},
-//             { 96, 125, 139}
-//         };
-
         Canvas canvas = new Canvas(rgba);
 
         Paint paint = new Paint();
@@ -225,7 +207,7 @@ public class MainActivity extends Activity
         BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
 
         // The new size we want to scale to
-        final int REQUIRED_SIZE = 400;
+        final int REQUIRED_SIZE = 640;
 
         // Find the correct scale value. It should be the power of 2.
         int width_tmp = o.outWidth, height_tmp = o.outHeight;
@@ -243,7 +225,34 @@ public class MainActivity extends Activity
         // Decode with inSampleSize
         BitmapFactory.Options o2 = new BitmapFactory.Options();
         o2.inSampleSize = scale;
-        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
+        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
+
+        // Rotate according to EXIF
+        int rotate = 0;
+        try
+        {
+            ExifInterface exif = new ExifInterface(getContentResolver().openInputStream(selectedImage));
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 270;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 90;
+                    break;
+            }
+        }
+        catch (IOException e)
+        {
+            Log.e("MainActivity", "ExifInterface IOException");
+        }
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotate);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
 }
