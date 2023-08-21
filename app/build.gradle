@@ -1,18 +1,18 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 28
     buildToolsVersion "29.0.2"
 
     defaultConfig {
-        applicationId "com.tencent.yolov5ncnn"
+        applicationId "com.hhu.smartdetection"
         archivesBaseName = "$applicationId"
 
         ndk {
             moduleName "ncnn"
             abiFilters "armeabi-v7a", "arm64-v8a"
         }
-        minSdkVersion 24
+        minSdkVersion 28
     }
 
     externalNativeBuild {
@@ -21,4 +21,22 @@ android {
             path file('src/main/jni/CMakeLists.txt')
         }
     }
+    dependencies {
+        // 裁剪相关
+        implementation 'com.github.yalantis:ucrop:2.2.6'
+        // XUI dialog相关
+        implementation 'com.github.xuexiangjys:XUI:1.1.9'
+        implementation 'com.github.xuexiangjys.XUtil:xutil-core:2.0.0'
+        // 权限相关
+        implementation 'com.yanzhenjie:permission:2.0.2'
+        // 加载图片
+        implementation 'com.github.bumptech.glide:glide:4.13.1'
+        implementation "com.google.android.material:material:1.1.0-alpha01"
+
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
 }

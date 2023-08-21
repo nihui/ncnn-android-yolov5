@@ -304,8 +304,8 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved)
     ncnn::destroy_gpu_instance();
 }
 
-// public native boolean Init(AssetManager mgr);
-JNIEXPORT jboolean JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Init(JNIEnv* env, jobject thiz, jobject assetManager)
+// public native boolean Init(AssetManager mgr,int modelid);
+JNIEXPORT jboolean JNICALL Java_com_hhu_smartdetection_YoloV5Ncnn_Init(JNIEnv* env, jobject thiz, jobject assetManager,jint modelid)
 {
     ncnn::Option opt;
     opt.lightmode = true;
@@ -324,31 +324,48 @@ JNIEXPORT jboolean JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Init(JNIEnv* e
 
     yolov5.register_custom_layer("YoloV5Focus", YoloV5Focus_layer_creator);
 
+    const char* modelbins[] =
+            {
+                    "construction.bin",
+                    "pipe.bin",
+            };
+
+    const char* modelparams[] =
+            {
+                    "construction.param",
+                    "pipe.param",
+            };
+
     // init param
     {
-        int ret = yolov5.load_param(mgr, "yolov5s.param");
-        if (ret != 0)
-        {
+        int ret = yolov5.load_param(mgr, modelparams[(int)modelid]);
+        if (ret != 0) {
             __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "load_param failed");
             return JNI_FALSE;
         }
     }
+    __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "load_model_param %s succeed",modelparams[(int)modelid]);
 
     // init bin
     {
-        int ret = yolov5.load_model(mgr, "yolov5s.bin");
+        char *extension = "bin";
+        int ret = yolov5.load_model(mgr, modelbins[(int)modelid]);
+
         if (ret != 0)
         {
             __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "load_model failed");
             return JNI_FALSE;
         }
     }
+    __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "load_model_bin %s succeed",modelbins[(int)modelid]);
 
     // init jni glue
-    jclass localObjCls = env->FindClass("com/tencent/yolov5ncnn/YoloV5Ncnn$Obj");
+    __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "load_param failed");
+    jclass localObjCls = env->FindClass("com/hhu/smartdetection/YoloV5Ncnn$Obj");
     objCls = reinterpret_cast<jclass>(env->NewGlobalRef(localObjCls));
 
-    constructortorId = env->GetMethodID(objCls, "<init>", "(Lcom/tencent/yolov5ncnn/YoloV5Ncnn;)V");
+
+    constructortorId = env->GetMethodID(objCls, "<init>", "(Lcom/hhu/smartdetection/YoloV5Ncnn;)V");
 
     xId = env->GetFieldID(objCls, "x", "F");
     yId = env->GetFieldID(objCls, "y", "F");
@@ -361,7 +378,7 @@ JNIEXPORT jboolean JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Init(JNIEnv* e
 }
 
 // public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
-JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNIEnv* env, jobject thiz, jobject bitmap, jboolean use_gpu)
+JNIEXPORT jobjectArray JNICALL Java_com_hhu_smartdetection_YoloV5Ncnn_Detect(JNIEnv* env, jobject thiz, jobject bitmap, jint modelid,jboolean use_gpu)
 {
     if (use_gpu == JNI_TRUE && ncnn::get_gpu_count() == 0)
     {
@@ -370,13 +387,13 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
     }
 
     double start_time = ncnn::get_current_time();
-
     AndroidBitmapInfo info;
     AndroidBitmap_getInfo(env, bitmap, &info);
     const int width = info.width;
     const int height = info.height;
     if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888)
         return NULL;
+
 
     // ncnn from bitmap
     const int target_size = 640;
@@ -407,11 +424,38 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
     ncnn::Mat in_pad;
     ncnn::copy_make_border(in, in_pad, hpad / 2, hpad - hpad / 2, wpad / 2, wpad - wpad / 2, ncnn::BORDER_CONSTANT, 114.f);
 
+
     // yolov5
     std::vector<Object> objects;
     {
         const float prob_threshold = 0.25f;
         const float nms_threshold = 0.45f;
+
+        const char* construction_blob[] =
+                {
+                        "output",
+                        "353",
+                        "367",
+                };
+
+        const char* pipe_blob[] =
+                {
+                        "output",
+                        "353",
+                        "367",
+                };
+
+        const char **blob_name = nullptr;
+        if (modelid == 0){
+            blob_name = construction_blob;
+        } else if (modelid == 1){
+            blob_name = pipe_blob;
+        }
+
+        if (blob_name == nullptr) {
+            blob_name = construction_blob;
+            // 处理错误的情况
+        }
 
         const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
         in_pad.substract_mean_normalize(0, norm_vals);
@@ -429,7 +473,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
         // stride 8
         {
             ncnn::Mat out;
-            ex.extract("output", out);
+            ex.extract(blob_name[0], out);
 
             ncnn::Mat anchors(6);
             anchors[0] = 10.f;
@@ -448,7 +492,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
         // stride 16
         {
             ncnn::Mat out;
-            ex.extract("781", out);
+            // ex.extract("353", out);
+            ex.extract(blob_name[1], out);
 
             ncnn::Mat anchors(6);
             anchors[0] = 30.f;
@@ -467,7 +512,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
         // stride 32
         {
             ncnn::Mat out;
-            ex.extract("801", out);
+            // ex.extract("367", out);
+            ex.extract(blob_name[2], out);
 
             ncnn::Mat anchors(6);
             anchors[0] = 116.f;
@@ -482,6 +528,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
 
             proposals.insert(proposals.end(), objects32.begin(), objects32.end());
         }
+
 
         // sort all proposals by score from highest to lowest
         qsort_descent_inplace(proposals);
@@ -516,18 +563,30 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
         }
     }
 
-    // objects to Obj[]
-    static const char* class_names[] = {
-        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
-        "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
-        "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
-        "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-        "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
-        "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-        "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
-        "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
-        "hair drier", "toothbrush"
+
+    static const char* construction_class_names[] = {
+            "tou","noc","dang","zhui","keng","yan","huo","dao","shi"
     };
+
+
+    // objects to Obj[]
+    static const char* pipe_class_names[] = {
+            "PL","BX","FS","CK","QF","TJ","JG","FZ","ZW","BT","CJ","CR","SG"
+    };
+
+    static const char** class_names = nullptr;
+
+    if (modelid == 0){
+        class_names = construction_class_names;
+    } else if (modelid == 1){
+        class_names = pipe_class_names;
+    }
+
+    // 确保设置了合适的class_names值
+    if (class_names == nullptr) {
+        class_names = construction_class_names;
+        // 处理错误的情况
+    }
 
     jobjectArray jObjArray = env->NewObjectArray(objects.size(), objCls, NULL);
 
@@ -539,7 +598,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_tencent_yolov5ncnn_YoloV5Ncnn_Detect(JNI
         env->SetFloatField(jObj, yId, objects[i].y);
         env->SetFloatField(jObj, wId, objects[i].w);
         env->SetFloatField(jObj, hId, objects[i].h);
+
+        __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "%s",class_names[objects[i].label]);
         env->SetObjectField(jObj, labelId, env->NewStringUTF(class_names[objects[i].label]));
+
+
         env->SetFloatField(jObj, probId, objects[i].prob);
 
         env->SetObjectArrayElement(jObjArray, i, jObj);
