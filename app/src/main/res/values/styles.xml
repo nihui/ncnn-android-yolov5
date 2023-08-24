@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.MainTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 自定义自己的主题样式 -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="RoundButton.Grid" parent="RoundButton.Auto">
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:layout_rowWeight">1</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:textColor">#000000</item>
+        <item name="rb_borderColor">@color/xui_transparent</item>
+        <item name="rb_backgroundColor">@color/grid_bt_color</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">30dp</item>
+    </style>
+</resources>

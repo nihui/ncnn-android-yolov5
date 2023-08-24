@@ -25,14 +25,15 @@ android {
         // 裁剪相关
         implementation 'com.github.yalantis:ucrop:2.2.6'
         // XUI dialog相关
-        implementation 'com.github.xuexiangjys:XUI:1.1.9'
-        implementation 'com.github.xuexiangjys.XUtil:xutil-core:2.0.0'
+        //androidx项目
+        implementation 'com.github.xuexiangjys:XUI:1.2.1'
+
+        implementation 'androidx.appcompat:appcompat:1.0.2'
+        implementation 'androidx.recyclerview:recyclerview:1.0.0'
+        implementation 'com.google.android.material:material:1.1.0-alpha07'
+        implementation 'com.github.bumptech.glide:glide:4.8.0'
         // 权限相关
         implementation 'com.yanzhenjie:permission:2.0.2'
-        // 加载图片
-        implementation 'com.github.bumptech.glide:glide:4.13.1'
-        implementation "com.google.android.material:material:1.1.0-alpha01"
-
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

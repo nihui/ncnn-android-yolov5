@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="colorPrimary">#85AF2F</color>
+    <color name="colorPrimaryDark">#85AF2F</color>
+    <color name="colorAccent">#85AF2F</color>
+    <color name="grid_bt_color">#40FBF2E3</color>
+</resources>

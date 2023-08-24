@@ -1,10 +1,6 @@
-# ncnn-android-yolov5
-
-The YOLOv5 object detection
-
+# smart-construction-android
 this is a sample ncnn android project, it depends on ncnn library only
-
-https://github.com/Tencent/ncnn
+The YOLOv5 object detection is based on https://github.com/nihui/ncnn-android-yolov5,Implement more functions.
 
 ## how to build and run
 ### step1
@@ -18,6 +14,4 @@ extract ncnn-android-vulkan.zip into app/src/main/jni or change the ncnn_DIR pat
 ### step3
 open this project with Android Studio, build it and enjoy!
 
-## screenshot
-![](screenshot.jpg)
 

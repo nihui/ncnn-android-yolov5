@@ -3,14 +3,26 @@
     <string name="app_name">智慧工地</string>
     <string name="construction_introduction">可检测未佩戴安全帽，未穿反光衣，人员跌倒，烟雾，火焰，反光锥摆放，水坑，围挡不规范等8种常见工地安全隐患与质量问题</string>
     <string name="pipe_introduction">可检测浮渣,破裂,树根,异物穿入,沉积,坝头,障碍物,结垢,脱节,起伏,错口等13种常见管道缺陷</string>
-    <string-array name="model_array">
-        <item>质量监测</item>
+<!--    <string-array name="model_array">-->
+<!--        <item>质量监测</item>-->
+<!--        <item>管道缺陷</item>-->
+<!--    </string-array>-->
+<!--    <string-array name="secondmodel_array">-->
+<!--        <item>安全隐患</item>-->
+<!--        <item>石块识别</item>-->
+<!--    </string-array>-->
+    <string-array name="class_array">
+        <item>安全帽</item>
+        <item>围挡</item>
+        <item>烟雾火焰</item>
+        <item>积水</item>
+        <item>跌倒</item>
+        <item>回填石块</item>
         <item>管道缺陷</item>
+        <item>围挡区域闯入</item>
+        <item>办公人员脱岗</item>
     </string-array>
-    <string-array name="secondmodel_array">
-        <item>安全隐患</item>
-        <item>石块识别</item>
-    </string-array>
+
     <string-array name="cpugpu_array">
         <item>CPU</item>
         <item>GPU</item>
